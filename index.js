@@ -1,8 +1,31 @@
 // Functions
+const updateUI = () => {
+	const itemsAllList = document.querySelectorAll('li');
+	if (!itemsAllList.length) {
+		itemFilter.style.display = 'none';
+		clearButton.style.display = 'none';
+	} else {
+		itemFilter.style.display = 'block';
+		clearButton.style.display = 'block';
+	}
+};
+
+const filterItems = (e) => {
+	const text = e.target.value.toLowerCase();
+	const itemsAllList = document.querySelectorAll('li');
+	itemsAllList.forEach((e) => {
+		const currItemName = e.firstChild.textContent.toLowerCase();
+		currItemName.indexOf(text) != -1
+			? (e.style.display = 'flex')
+			: (e.style.display = 'none');
+	});
+};
+
 const clearList = () => {
 	while (itemList.firstChild) {
 		itemList.removeChild(itemList.firstChild);
 	}
+	updateUI();
 };
 
 const createButton = (classes) => {
@@ -20,11 +43,45 @@ const createIcon = (classes) => {
 const clearItem = (e) => {
 	if (itemList.firstChild) {
 		e.target.classList.contains('icon-clear') === true
-			? e.target.parentElement.parentElement.remove()
+			? confirm('Are you sure?')
+				? (e.target.parentElement.parentElement.remove(), updateUI())
+				: null
 			: null;
-	} else {
-		return;
 	}
+};
+
+const addItemDOM = (e) => {
+	const li = document.createElement('li');
+	li.appendChild(document.createTextNode(e));
+
+	const button = createButton('remove-item btn-link text-red');
+	li.appendChild(button);
+
+	const icon = createIcon('fa-solid fa-xmark icon-clear');
+	button.appendChild(icon);
+	itemList.appendChild(li);
+};
+
+const addItemLocalStorage = (e) => {
+	const itemsLocalStorage = getItemLocalStorage();
+	if (localStorage.getItem('items') === null) {
+		itemsLocalStorage = [];
+	} else itemsLocalStorage = JSON.parse(localStorage.getItem('items'));
+
+	itemsLocalStorage.push(e);
+
+	// convert to jeson
+
+	localStorage.setItem('items', JSON.stringify(itemsLocalStorage));
+};
+
+const getItemLocalStorage = () => {
+	let itemsLocalStorage;
+	if (localStorage.getItem('items') === null) {
+		itemsLocalStorage = [];
+	} else itemsLocalStorage = JSON.parse(localStorage.getItem('items'));
+
+	return itemsLocalStorage;
 };
 
 const addItem = (e) => {
@@ -35,18 +92,12 @@ const addItem = (e) => {
 		alert('Please add item');
 		return;
 	}
-
-	const li = document.createElement('li');
-	li.appendChild(document.createTextNode(itemValue));
-
-	const button = createButton('remove-item btn-link text-red');
-	li.appendChild(button);
-
-	const icon = createIcon('fa-solid fa-xmark icon-clear');
-	button.appendChild(icon);
-
-	itemList.appendChild(li);
-	console.log(li);
+	// Create DOM element
+	addItemDOM(itemValue);
+	// Create Local Storage
+	addItemLocalStorage(itemValue);
+	// Update UI
+	updateUI();
 };
 
 // Main elements
@@ -55,8 +106,11 @@ const itemForm = document.querySelector('#item-form');
 const itemInput = document.querySelector('#item-input');
 const itemList = document.querySelector('#item-list');
 const clearButton = document.querySelector('#clear-button');
+const itemFilter = document.querySelector('#filter');
 
 // Event Listiners
+updateUI();
 itemForm.addEventListener('submit', addItem);
+itemFilter.addEventListener('input', filterItems);
 itemList.addEventListener('click', clearItem);
 clearButton.addEventListener('click', clearList);
