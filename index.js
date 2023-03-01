@@ -1,3 +1,13 @@
+// Elements
+
+const itemForm = document.querySelector('#item-form');
+const itemInput = document.querySelector('#item-input');
+const itemList = document.querySelector('#item-list');
+const clearButton = document.querySelector('#clear-button');
+const itemFilter = document.querySelector('#filter');
+const formBtn = itemForm.querySelector('button');
+let isEditMode = false;
+
 // Functions
 const updateUI = () => {
 	const itemsAllList = document.querySelectorAll('li');
@@ -28,6 +38,11 @@ const clearList = () => {
 	updateUI();
 };
 
+const removeItemFromStorage = (e) => {
+	let itemsFromStorage = getItemLocalStorage();
+	itemsFromStorage = itemsFromStorage.filter((elem) => elem !== e);
+	localStorage.setItem('items', JSON.stringify(itemsFromStorage));
+};
 const createButton = (classes) => {
 	const button = document.createElement('button');
 	button.setAttribute('class', classes);
@@ -40,13 +55,23 @@ const createIcon = (classes) => {
 	return icon;
 };
 
+const setEditMode = (e) => {
+	isEditMode = true;
+	e.classList.add('edit-mode');
+	formBtn.innerHTML = '<i class ="fa-solid"></i>';
+};
+
 const clearItem = (e) => {
 	if (itemList.firstChild) {
 		e.target.classList.contains('icon-clear') === true
 			? confirm('Are you sure?')
-				? (e.target.parentElement.parentElement.remove(), updateUI())
+				? (e.target.parentElement.parentElement.remove(),
+				  removeItemFromStorage(
+						e.target.parentElement.parentElement.textContent
+				  ),
+				  updateUI())
 				: null
-			: null;
+			: setEditMode(e.target);
 	}
 };
 
@@ -64,14 +89,9 @@ const addItemDOM = (e) => {
 
 const addItemLocalStorage = (e) => {
 	const itemsLocalStorage = getItemLocalStorage();
-	if (localStorage.getItem('items') === null) {
-		itemsLocalStorage = [];
-	} else itemsLocalStorage = JSON.parse(localStorage.getItem('items'));
-
 	itemsLocalStorage.push(e);
 
 	// convert to jeson
-
 	localStorage.setItem('items', JSON.stringify(itemsLocalStorage));
 };
 
@@ -82,6 +102,12 @@ const getItemLocalStorage = () => {
 	} else itemsLocalStorage = JSON.parse(localStorage.getItem('items'));
 
 	return itemsLocalStorage;
+};
+
+const displayItems = (e) => {
+	const itemsLocalStorage = getItemLocalStorage();
+	itemsLocalStorage.forEach((e) => addItemDOM(e));
+	updateUI();
 };
 
 const addItem = (e) => {
@@ -100,17 +126,13 @@ const addItem = (e) => {
 	updateUI();
 };
 
-// Main elements
-
-const itemForm = document.querySelector('#item-form');
-const itemInput = document.querySelector('#item-input');
-const itemList = document.querySelector('#item-list');
-const clearButton = document.querySelector('#clear-button');
-const itemFilter = document.querySelector('#filter');
-
-// Event Listiners
-updateUI();
-itemForm.addEventListener('submit', addItem);
-itemFilter.addEventListener('input', filterItems);
-itemList.addEventListener('click', clearItem);
-clearButton.addEventListener('click', clearList);
+// Event listiners
+const main = () => {
+	updateUI();
+	itemForm.addEventListener('submit', addItem);
+	itemFilter.addEventListener('input', filterItems);
+	itemList.addEventListener('click', clearItem);
+	clearButton.addEventListener('click', clearList);
+	document.addEventListener('DOMContentLoaded', displayItems);
+};
+main();
